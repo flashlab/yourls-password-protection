@@ -14,8 +14,52 @@ if( !defined( 'YOURLS_ABSPATH' ) ) die();
 // Hook our custom function into the 'pre_redirect' event
 yourls_add_action( 'pre_redirect', 'warning_redirection' );
 
+function get_default_i18ns()
+{
+	$i18n = [
+		'zh_CN' => [
+			's_url' => '短链接',
+			'o_url' => '原始链接',
+			'pwd' => '密码',
+			'success' => '成功！',
+			'is_enable' => '是否启用?',
+			'pre' => '上一页',
+			'next' => '下一页',
+			'submit' => '提交',
+			'search' => '搜索',
+			'label_search' => '搜索短链接：',
+			'send' => '解锁！',
+			'wrong' => '密码错误',
+			'notice_tit' => '重定向说明',
+			'setting_page' => '密码保护'
+		],
+		'en_US' => [
+			's_url' => 'Short URL',
+			'o_url' => 'Original URL',
+			'pwd' => 'Password',
+			'success' => 'Success!',
+			'is_enable' => 'Enable?',
+			'pre' => 'Previous',
+			'next' => 'Next',
+			'submit' => 'Submit',
+			'search' => 'Search',
+			'label_search' => 'Search Short URL:',
+			'send' => 'Send!',
+			'wrong' => 'Incorrect Password, try again',
+			'notice_tit' => 'Redirection Notice',
+			'setting_page' => 'Password Protection'
+		],
+	];
+	$lang = YOURLS_LANG;
+	if (!array_key_exists($lang, $i18n)) {
+		$lang = 'en_US';
+	}
+	return $i18n[$lang];
+}
+
 // Custom function that will be triggered when the event occurs
 function warning_redirection( $args ) {
+	$_i18n = get_default_i18ns();
 	$matthew_pwprotection_array = json_decode(yourls_get_option('matthew_pwprotection'), true);
 	if ($matthew_pwprotection_array === false) {
 		yourls_add_option('matthew_pwprotection', 'null');
@@ -40,16 +84,12 @@ function warning_redirection( $args ) {
 
 			die();
 		} else {
-			$error = ( isset( $_POST[ 'password' ] ) ? "<script>alertify.error(\"Incorrect Password, try again\")</script>" : "");
-			$matthew_ppu =    yourls__( "Password Protected URL",                       "matthew_pwp" ); // Translate Password Title
-			$matthew_ph =     yourls__( "Password"                                    , "matthew_pwp" ); // Translate the word Password
-			$matthew_sm =     yourls__( "Please enter the password below to continue.", "matthew_pwp" ); // Translate the main message
-			$matthew_submit = yourls__( "Send!"                                       , "matthew_pwp" ); // Translate the Submit button
+			$error = ( isset( $_POST[ 'password' ] ) ? "<script>alertify.error(\"{$_i18n['wrong']}\")</script>" : "");
 			// Displays main "Insert Password" area
 			echo <<<PWP
 			<html>
 				<head>
-					<title>Redirection Notice</title>
+					<title>{$_i18n['notice_tit']}</title>
 					<style>
 						@import url(https://weloveiconfonts.com/api/?family=fontawesome);
 						@import url(https://meyerweb.com/eric/tools/css/reset/reset.css);
@@ -180,7 +220,7 @@ function warning_redirection( $args ) {
 							<form method="post">
 								<fieldset class="clearfix">
 									<p><span class="fontawesome-lock"></span><input type="password" name="password" value="Password" onBlur="if(this.value == '') this.value = 'Password'" onFocus="if(this.value == 'Password') this.value = ''" required></p>
-									<p><input type="submit" value="$matthew_submit"></p>
+									<p><input type="submit" value="{$_i18n['send']}"></p>
 								</fieldset>
 							</form>
 						</div>
@@ -197,7 +237,7 @@ PWP;
 // Register plugin page in admin page
 yourls_add_action( 'plugins_loaded', 'matthew_pwprotection_display_panel' );
 function matthew_pwprotection_display_panel() {
-	yourls_register_plugin_page( 'matthew_pwp', 'Password Protection', 'matthew_pwprotection_display_page' );
+	yourls_register_plugin_page( 'matthew_pwp', get_default_i18ns()['setting_page'], 'matthew_pwprotection_display_page' );
 }
 
 // Function which will draw the admin page
@@ -231,12 +271,13 @@ function matthew_pwprotection_process_new() {
 	// Update database
 	yourls_update_option( 'matthew_pwprotection', json_encode( $_POST[ 'password' ] ) );
 	
-	echo "<p style='color: green'>Success!</p>";
+	echo "<p style='color: green'>{get_default_i18ns()['success']}</p>";
 }
 
 // Display Form
 function matthew_pwprotection_process_display() {
 	$ydb = yourls_get_db();
+	$_i18n = get_default_i18ns();
 
 	// get limit and offset for pagination
 	$limit = 50;
@@ -267,17 +308,15 @@ function matthew_pwprotection_process_display() {
 	
 	$query = $ydb->fetchAll($sql, $binds);
 
-	$matthew_su = yourls__( "Short URL"   , "matthew_pwp" ); // Translate "Short URL"
-	$matthew_ou = yourls__( "Original URL", "matthew_pwp" ); // Translate "Original URL"
-	$matthew_pw = yourls__( "Password"    , "matthew_pwp" ); // Translate "Password"
-
 	// Protect action with nonce
 	$matthew_pwprotection_noncefield = yourls_nonce_field( "matthew_pwprotection_update" );
 
 	echo <<<TB
 	<style>
 	table {
-		border-collapse: collapse;
+		border-collapse: separate;
+        text-indent: initial;
+        border-spacing: 2px;
 		width: 100%;
 	}
 
@@ -289,17 +328,17 @@ function matthew_pwprotection_process_display() {
 	tr:nth-child(even){background-color: #f2f2f2}
 	tr:nth-child(odd){background-color: #fff}
 	</style>
-	<div style="overflow-x:auto;">
+	<main class="sub_wrap" style="overflow-x:auto;padding-top:35px;">
 		<form method="post" id="form_submit">
-		<label>Search Short URL:</label>
+		<label>{$_i18n['label_search']}</label>
 		<input type="text" id="txt_search" size="20">
-		<input id="btn_search" type="button" value="Search">
-			<table>
-				<tr>
-					<th>$matthew_su</th>
-					<th>$matthew_ou</th>
-					<th>$matthew_pw</th>
-				</tr>
+		<input id="btn_search" type="button" value="{$_i18n['search']}">
+			<table class="tblSorter">
+				<thead><tr>
+					<th>{$_i18n['s_url']}</th>
+					<th>{$_i18n['o_url']}</th>
+					<th>{$_i18n['pwd']}</th>
+				</tr></thead><tbody>
 TB;
 
 	foreach( $query as $link ) { // Displays all shorturls in the YOURLS DB
@@ -312,14 +351,14 @@ TB;
 			$sURL = $url;
 		}
 		if( array_key_exists( $short, (array)$matthew_pwprotection_array ) ){ // Check if URL is currently password protected or not
-			$text = yourls__( "Enable?" );
+			$text = $_i18n['is_enable'];
 			$password = "DONOTCHANGE_8fggwrFrRXvqndzw";
 			$checked = " checked";
 			$unchecked = '';
 			$style = '';
 			$disabled = '';
 		} else {
-			$text = yourls__( "Enable?" );
+			$text = $_i18n['is_enable'];
 			$password = '';
 			$checked = '';
 			$unchecked = ' disabled';
@@ -334,7 +373,7 @@ TB;
 					<td>
 						<input type="checkbox" name="checked[{$short}]" class="matthew_pwprotection_checkbox" value="enable" data-input="$short"$checked> $text
 						<input type="hidden" name="unchecked[{$short}]" id="{$short}_hidden" value="true"$unchecked>
-						<input id="$short" type="password" name="password[$short]" style="$style" value="$password" onkeypress="return checkIfSubmitPassword(event);" placeholder="Password..."$disabled ><br>
+						<input id="$short" type="password" name="password[$short]" style="$style" value="$password" onkeypress="return checkIfSubmitPassword(event);" placeholder="{$_i18n['pwd']}..."$disabled ><br>
 					</td>
 				</tr>
 TABLE;
@@ -346,13 +385,13 @@ TABLE;
 	$total_data = count($query);
 
 	echo <<<END
-			</table>
+			</tbody>></table>
 			$matthew_pwprotection_noncefield
-			<input id="btn_previous" type="button" value="Previous">
-			<input id="btn_next" type="button" value="Next">
-			<p><input id="btn_submit" type="button" value="Submit"></p>
+			<input id="btn_previous" type="button" value="{$_i18n['pre']}">
+			<input id="btn_next" type="button" value="{$_i18n['next']}">
+			<p><input id="btn_submit" type="button" value="{$_i18n['submit']}"></p>
 		</form>
-	</div>
+	</main>
 	<script>
 		$("#txt_search").val("$short_url_to_filter");
 		$("#txt_search").focus();

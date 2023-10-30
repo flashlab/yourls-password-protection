@@ -315,8 +315,8 @@ function matthew_pwprotection_process_display() {
 	<style>
 	table {
 		border-collapse: separate;
-        text-indent: initial;
-        border-spacing: 2px;
+		text-indent: initial;
+		border-spacing: 2px;
 		width: 100%;
 	}
 
@@ -325,10 +325,10 @@ function matthew_pwprotection_process_display() {
 		padding: 8px;
 	}
 
-	tr:nth-child(even){background-color: #f2f2f2}
-	tr:nth-child(odd){background-color: #fff}
+	// tr:nth-child(even){background-color: #f2f2f2}
+	// tr:nth-child(odd){background-color: #fff}
 	</style>
-	<main class="sub_wrap" style="overflow-x:auto;padding-top:35px;">
+	<main>
 		<form method="post" id="form_submit">
 		<label>{$_i18n['label_search']}</label>
 		<input type="text" id="txt_search" size="20">
@@ -338,7 +338,7 @@ function matthew_pwprotection_process_display() {
 					<th>{$_i18n['s_url']}</th>
 					<th>{$_i18n['o_url']}</th>
 					<th>{$_i18n['pwd']}</th>
-				</tr></thead><tbody>
+				</tr></thead></tbody>
 TB;
 
 	foreach( $query as $link ) { // Displays all shorturls in the YOURLS DB

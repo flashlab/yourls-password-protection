@@ -385,7 +385,7 @@ TABLE;
 	$total_data = count($query);
 
 	echo <<<END
-			</tbody>></table>
+			</tbody></table>
 			$matthew_pwprotection_noncefield
 			<input id="btn_previous" type="button" value="{$_i18n['pre']}">
 			<input id="btn_next" type="button" value="{$_i18n['next']}">
